@@ -73,41 +73,90 @@ const FoodDetails: React.FC = () => {
 
   useEffect(() => {
     async function loadFood(): Promise<void> {
-      // Load a specific food with extras based on routeParams id
+      api
+        .get<Food>(`/foods/${routeParams.id}`)
+        .then(({ data }) => ({
+          ...data,
+          formattedPrice: formatValue(data.price),
+        }))
+        .then(data => {
+          setFood(data);
+          setExtras(
+            data.extras.map(extra => ({ ...extra, quantity: 0 })) || [],
+          );
+        });
     }
 
     loadFood();
   }, [routeParams]);
 
   function handleIncrementExtra(id: number): void {
-    // Increment extra quantity
+    const tmpExtras = extras.map(extra => {
+      if (extra.id === id) {
+        const updatedExtra: Extra = {
+          ...extra,
+          quantity: extra.quantity + 1,
+        };
+
+        return updatedExtra;
+      }
+
+      return extra;
+    });
+
+    setExtras(tmpExtras);
   }
 
   function handleDecrementExtra(id: number): void {
-    // Decrement extra quantity
+    const tmpExtras = extras.map(extra => {
+      if (extra.id === id && extra.quantity > 0) {
+        const updatedExtra: Extra = {
+          ...extra,
+          quantity: extra.quantity - 1,
+        };
+
+        return updatedExtra;
+      }
+
+      return extra;
+    });
+
+    setExtras(tmpExtras);
   }
 
   function handleIncrementFood(): void {
-    // Increment food quantity
+    setFoodQuantity(currValue => currValue + 1);
   }
 
   function handleDecrementFood(): void {
-    // Decrement food quantity
+    if (foodQuantity > 1) {
+      setFoodQuantity(currValue => currValue - 1);
+    }
   }
 
   const toggleFavorite = useCallback(() => {
-    // Toggle if food is favorite or not
+    const tmpIsFavorite = !isFavorite;
+    setIsFavorite(tmpIsFavorite);
+
+    if (tmpIsFavorite) {
+      api.post('/favorites', food);
+    } else {
+      api.delete(`/favorites/${food.id}`);
+    }
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
-    // Calculate cartTotal
+    const newPrice =
+      extras.reduce((acc, curr) => acc + curr.quantity * curr.value, 0) +
+      food.price * foodQuantity;
+
+    return formatValue(newPrice);
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
     // Finish the order and save on the API
   }
 
-  // Calculate the correct icon name
   const favoriteIconName = useMemo(
     () => (isFavorite ? 'favorite' : 'favorite-border'),
     [isFavorite],

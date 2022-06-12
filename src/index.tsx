@@ -7,6 +7,9 @@ import 'intl/locale-data/jsonp/pt-BR';
 import Routes from './routes';
 
 const App: React.FC = () => {
+  GLOBAL.XMLHttpRequest =
+    GLOBAL.originalXMLHttpRequest || GLOBAL.XMLHttpRequest;
+
   return (
     <View style={{ flex: 1 }}>
       <StatusBar
